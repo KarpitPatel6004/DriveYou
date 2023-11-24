@@ -64,3 +64,21 @@ class Driver(AbstractBaseUser):
     emergency_contact_number = models.CharField(max_length=10, validators=[validate_mobile_number])
 
     USERNAME_FIELD = 'email'
+
+class Car(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='cars')
+    make = models.CharField(max_length=100)
+    model = models.CharField(max_length=100)
+    year = models.PositiveIntegerField()
+    license_plate = models.CharField(max_length=20, unique=True)
+    has_insurance = models.BooleanField(default=False)
+    registration_number = models.CharField(max_length=20, unique=True)
+    registration_date = models.DateField()
+    registration_expiry_date = models.DateField()
+
+class SearchRequest(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='search_results')
+    start_location = models.CharField(max_length=100)
+    destination = models.CharField(max_length=100)
+    user_travel_time = models.DateTimeField()
+    search_time = models.DateTimeField(auto_now_add=True)
