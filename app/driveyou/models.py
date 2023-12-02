@@ -1,6 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, BaseUserManager, AbstractBaseUser
-from validators import validate_mobile_number
+from validators import validate_mobile_number, validate_date_travel_date
 
 class UserManager(BaseUserManager):
     """Define a model manager for User model with no username field."""
@@ -80,5 +80,23 @@ class SearchRequest(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='search_results')
     start_location = models.CharField(max_length=100)
     destination = models.CharField(max_length=100)
-    user_travel_time = models.DateTimeField()
+    start_lat = models.DecimalField(max_digits=9, decimal_places=6)
+    start_lon = models.DecimalField(max_digits=9, decimal_places=6)
+    end_lat = models.DecimalField(max_digits=9, decimal_places=6)
+    end_lon = models.DecimalField(max_digits=9, decimal_places=6)
+    distance = models.FloatField()
+    duration = models.FloatField()
+    price = models.FloatField()
+    user_travel_time = models.DateTimeField(validators=[validate_date_travel_date])
     search_time = models.DateTimeField(auto_now_add=True)
+
+class DriverPreferences(models.Model):
+    driver = models.ForeignKey(Driver, on_delete=models.CASCADE, related_name='driver_preferences')
+    search_radius = models.PositiveIntegerField(default=10)  # in kilometers
+    travel_distance = models.PositiveIntegerField(default=100)  # in kilometers
+    overnight_trip = models.BooleanField(default=True)
+    pet_friendly = models.BooleanField(default=False)
+    music_preference = models.CharField(max_length=50, choices=[('classical', 'Classical'), ('rock', 'Rock'), 
+                                                                ('pop', 'Pop'), ('none', 'None')], default='none')
+    smoking_preference = models.CharField(max_length=50, choices=[('allowed', 'Allowed'), ('not_allowed', 'Not Allowed'), 
+                                                                  ('neutral', 'Neutral')], default='neutral')

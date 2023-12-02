@@ -21,12 +21,24 @@ class CustomPasswordResetForm(PasswordResetForm):
     pass
 
 class CarForm(forms.ModelForm):
+    registration_date = forms.DateField(
+        label='Registration Date',
+        widget=forms.widgets.DateInput(attrs={'type':'date'})
+    )
+    registration_expiry_date = forms.DateField(
+        label='Registration Expiry Date',
+        widget=forms.widgets.DateInput(attrs={'type':'date'})
+    )
     class Meta:
         model = Car
         fields = ['make', 'model', 'year', 'has_insurance', 'registration_number', 
                   'registration_date', 'registration_expiry_date', 'license_plate']
         
 class SearchRequestForm(forms.ModelForm):
+    user_travel_time = forms.SplitDateTimeField(
+        label='Travel Time',
+        widget=forms.widgets.SplitDateTimeWidget(date_attrs={'type':'date'}, time_attrs={'type':'time'})
+    )
     class Meta:
         model = SearchRequest
-        fields = ['start_location', 'destination', 'user_travel_time']
+        fields = ['user_travel_time']

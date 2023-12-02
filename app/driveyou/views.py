@@ -97,15 +97,31 @@ def add_car(request):
 def need_driver(request):
     if request.method == 'POST':
         form = SearchRequestForm(request.POST)
+        start_loc = request.POST.get('start_location')
+        destination = request.POST.get('destination')
+        distance = request.POST.get('distance')
+        duration = request.POST.get('duration')
+        price = request.POST.get('price')
+        start_lat = request.POST.get('start_lat')
+        start_lon = request.POST.get('start_lon')
+        end_lat = request.POST.get('end_lat')
+        end_lon = request.POST.get('end_lon')
         if form.is_valid():
             search_request = form.save(commit=False)
             search_request.user = request.user
+            search_request.start_location = start_loc
+            search_request.destination = destination
+            search_request.distance = distance
+            search_request.duration = duration
+            search_request.price = price
+            search_request.start_lat = start_lat
+            search_request.start_lon = start_lon
+            search_request.end_lat = end_lat
+            search_request.end_lon = end_lon
             search_request.save()
 
-            # TODO: Add logic to find a driver based on start_location and destination
-            # This could involve querying your Driver model or initiating a search process
+            # TODO: Redirect to map to show nearby drivers
             return redirect('user_home_screen')
-            # return render(request, 'user_home_screen.html', {'search_request': search_request})
     else:
         form = SearchRequestForm()
 

@@ -41,7 +41,7 @@
     <h2>Your Search History..</h2>
     <ul>
         {% for search_request in search_requests %}
-            <li>{{ search_request.start_location }} - {{ search_request.destination }} ({{ search_request.user_travel_time }})</li>
+            <li>{{ search_request.start_location }} - {{ search_request.destination }} <br> ({{ search_request.user_travel_time }})</li>
         {% endfor %}
     </ul>
 
