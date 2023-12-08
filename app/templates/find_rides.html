@@ -54,7 +54,7 @@
         }
 
         // Add markers for each search request
-        var searchRequests = JSON.parse('{{ search_requests|safe }}');
+        var searchRequests = JSON.parse('{{ search_requests|safe|escapejs }}');
         searchRequests.forEach(function(request) {
             addSearchRequestMarker(
                 request.pk,

@@ -90,9 +90,10 @@ def password_reset_view(request):
 def user_home_screen(request):
     user = request.user
     cars = user.cars.all()
-    search_requests = user.search_results.all()
-    accepted_requests = user.search_results.filter(accepted=True)
-    pending_requests = user.search_results.filter(accepted=False)
+
+    search_results = user.search_results.all()
+    accepted_requests = search_results.filter(accepted__in=[True]).all()
+    pending_requests = search_results.filter(accepted__in=[False]).all()
     context = {'user': user, 'cars': cars, 
                'accepted_requests': accepted_requests, 'pending_requests': pending_requests}
     return render(request, 'user_home_screen.html', context)
@@ -184,13 +185,8 @@ def find_rides(request):
     #                                   Point((user.location_lon, user.location_lat), srid=4326))
     # ).filter(distance__lte=10)
 
-    search_requests = SearchRequest.objects.all()
-    
-    if search_requests:
-        search_requests = search_requests.filter(accepted=False)
-        search_requests_json = serialize('json', search_requests)
-    else:
-        search_requests_json = []
+    search_requests = SearchRequest.objects.filter(accepted__in=[False]).all()
+    search_requests_json = serialize('json', search_requests)
     context = {'search_requests': search_requests_json, 'user': user}
     return render(request, 'find_rides.html', context)
 
