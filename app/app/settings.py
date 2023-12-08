@@ -30,6 +30,8 @@ ALLOWED_HOSTS = []
 
 AUTH_USER_MODEL = 'driveyou.User'
 
+GDAL_LIBRARY_PATH = r'D:\Projects\DriveYou\.venv\Lib\site-packages\osgeo\gdal304.dll'
+GEOS_LIBRARY_PATH = r'D:\Projects\DriveYou\.venv\Lib\site-packages\osgeo\geos_c.dll'
 
 # Application definition
 
@@ -83,6 +85,17 @@ DATABASES = {
         'NAME': BASE_DIR / 'db.sqlite3',
     }
 }
+
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.contrib.gis.db.backends.postgis',
+#         'NAME': 'driveyou',
+#         'USER': 'postgres',
+#         'PASSWORD': 'passsword',
+#         'HOST': '127.0.0.1',
+#         'PORT': '5432',
+#     }
+# }
 
 
 # Password validation

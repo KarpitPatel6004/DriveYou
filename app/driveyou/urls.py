@@ -15,20 +15,24 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.urls import path
-from .views import driver_home_screen, driver_login_view, register_view_driver, register_view_user, \
+from .views import driver_home_screen, driver_login_view, driveyou_homescreen, find_rides, register_view_driver, register_view_user, update_driver_location, update_ride_status, \
     user_login_view, user_logout_view, password_reset_view, user_home_screen, driver_logout_view, \
     add_car, need_driver
 
 urlpatterns = [
-    path('user_register/', register_view_user, name='register'),
-    path('driver_register/', register_view_driver, name='register'),
+    path('', driveyou_homescreen, name='home'),
+    path('user_register/', register_view_user, name='user_register'),
+    path('driver_register/', register_view_driver, name='driver_register'),
     path('user_login/', user_login_view, name='user_login'),
     path('driver_login/', driver_login_view, name='driver_login'),
-    path('user_logout/', user_logout_view, name='logout'),
-    path('driver_logout/', driver_logout_view, name='logout'),
+    path('user_logout/', user_logout_view, name='user_logout'),
+    path('driver_logout/', driver_logout_view, name='driver_logout'),
     # path('password_reset/', password_reset_view, name='password_reset'),
     path('user_home_screen/', user_home_screen, name='user_home_screen'),
     path('driver_home_screen/', driver_home_screen, name='driver_home_screen'),
     path('add_car/', add_car, name='add_car'),
     path('need_driver/', need_driver, name='need_driver'),
+    path('find_rides/', find_rides, name='find_rides'),
+    path('update_driver_location/', update_driver_location, name='update_driver_location'),
+    path('update-ride-status/<int:ride_id>/', update_ride_status, name='update_ride_status'),
 ]

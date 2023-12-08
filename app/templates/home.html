@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home Page</title>
+</head>
+<body>
+    <h1>Welcome to the DriveYou</h1>
+
+    <a href="{% url 'driver_register' %}"><button>Sign Up as Driver</button></a>
+    <a href="{% url 'user_register' %}"><button>Sign Up as Client</button></a>
+
+    <p>Already a driver? <a href="{% url 'driver_login' %}">Sign In</a></p>
+    <p>Already a client? <a href="{% url 'user_login' %}">Sign In</a></p>
+</body>
+</html>

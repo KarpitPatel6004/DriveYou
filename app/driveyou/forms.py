@@ -1,6 +1,6 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm, PasswordResetForm
-from .models import Driver, SearchRequest, User, Car
+from .models import SearchRequest, User, Car
 
 class UserRegistrationForm(UserCreationForm):
     class Meta:
@@ -9,10 +9,15 @@ class UserRegistrationForm(UserCreationForm):
 
 class DriverRegistrationForm(UserCreationForm):
     class Meta:
-        model = Driver
+        model = User
         fields = ['phone', 'email', 'name']
 
-class CustomAuthenticationForm(AuthenticationForm):
+class UserCustomAuthenticationForm(AuthenticationForm):
+    class Meta:
+        model = User
+        fields = ['email', 'password']
+
+class DriverCustomAuthenticationForm(AuthenticationForm):
     class Meta:
         model = User
         fields = ['email', 'password']

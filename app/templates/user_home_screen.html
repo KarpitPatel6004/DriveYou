@@ -1,4 +1,3 @@
-<!-- templates/home.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -30,23 +29,40 @@
     <h2>Your Cars</h2>
     <ul>
         {% for car in cars %}
-            <li>{{ car.make }} - {{ car.model }} ({{ car.license_plate }})</li>
+            <li>Make: {{ car.make }} <br>
+                Model: {{ car.model }} <br>
+                Number Plate: {{ car.license_plate }}</li>
         {% endfor %}
     </ul>
 
     <a href="{% url 'add_car' %}">Add Car</a>
     <br/>
-    <!-- Posting Location and Destination -->
-
-    <h2>Your Search History..</h2>
+    
+    <h2>Your Accepted Rides..</h2>
     <ul>
-        {% for search_request in search_requests %}
-            <li>{{ search_request.start_location }} - {{ search_request.destination }} <br> ({{ search_request.user_travel_time }})</li>
+        {% for accepted_request in accepted_requests %}
+            <li>Start location: {{ accepted_request.start_location }} <br> 
+                Destination: {{ accepted_request.destination }} <br> 
+                Driver: {{ accepted_request.driver.name }} <br>
+                Driver Phone Number: {{ accepted_request.driver.phone }}</li>
+        {% endfor %}
+    </ul>
+
+    <br/>
+
+    <h2>Your Pending Rides</h2>
+    <ul>
+        {% for pending_request in pending_requests %}
+            <li>Start Location: {{ pending_request.start_location }} <br>
+                Destination: {{ pending_request.destination }} </li>
         {% endfor %}
     </ul>
 
     <a href="{% url 'need_driver' %}">Need a Driver??</h2>
     <!-- Add form or UI for posting location and destination -->
 
+    <br>
+    <br>
+    <a href="{% url 'user_logout' %}">Logout</a>
 </body>
 </html>
