@@ -184,9 +184,13 @@ def find_rides(request):
     #                                   Point((user.location_lon, user.location_lat), srid=4326))
     # ).filter(distance__lte=10)
 
-    search_requests = SearchRequest.objects.filter(accepted=False)
+    search_requests = SearchRequest.objects.all()
     
-    search_requests_json = serialize('json', search_requests)
+    if search_requests:
+        search_requests = search_requests.filter(accepted=False)
+        search_requests_json = serialize('json', search_requests)
+    else:
+        search_requests_json = []
     context = {'search_requests': search_requests_json, 'user': user}
     return render(request, 'find_rides.html', context)
 
