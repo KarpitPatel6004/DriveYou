@@ -4,14 +4,46 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Home Page</title>
+    <style>
+        .container {
+            display: flex;
+            justify-content: center;
+        }
+
+        .card {
+            background-color: white;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Adjust values as needed */
+            padding: 20px;
+            margin: 20px;
+            border-radius: 8px;
+        }
+
+        button {
+            padding: 10px;
+            margin: 5px;
+            border: none;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+    </style>
 </head>
 <body>
-    <h1>Welcome to the DriveYou</h1>
+    <div class="container">
+        <div class="card">
+            <h1>Welcome to DriveYou</h1>
 
-    <a href="{% url 'driver_register' %}"><button>Sign Up as Driver</button></a>
-    <a href="{% url 'user_register' %}"><button>Sign Up as Client</button></a>
+            <a href="{% url 'driver_register' %}"><button>Sign Up as Driver</button></a>
+            <a href="{% url 'user_register' %}"><button>Sign Up as Client</button></a>
 
-    <p>Already a driver? <a href="{% url 'driver_login' %}">Sign In</a></p>
-    <p>Already a client? <a href="{% url 'user_login' %}">Sign In</a></p>
+            <p>Already a driver? <a href="{% url 'driver_login' %}">Sign In</a></p>
+            <p>Already a client? <a href="{% url 'user_login' %}">Sign In</a></p>
+        </div>
+    </div>
 </body>
 </html>
