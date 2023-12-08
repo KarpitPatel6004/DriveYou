@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+</head>
+<body>
+    <h1>Welcome, {{ user.name }}!</h1>
+
+    <!-- Account Management -->
+    <h2>Account Management</h2>
+    <!-- <a href="">Change Password</a> -->
+
+    <!-- <form method="post" enctype="multipart/form-data" action="">
+        {% csrf_token %}
+        <label for="profile_picture">Profile Picture:</label>
+        <input type="file" name="profile_picture" accept="image/*">
+        <button type="submit">Upload Profile Picture</button>
+    </form> -->
+
+    <label for="emergency_contact_name">Emergency Contact Name:</label>
+    <input type="text" name="emergency_contact_name" value="{{ user.emergency_contact_name }}">
+    
+    <label for="emergency_contact_number">Emergency Contact Number:</label>
+    <input type="text" name="emergency_contact_number" value="{{ user.emergency_contact_number }}">
+
+    <!-- Cars -->
+    <h2>Your Cars</h2>
+    <ul>
+        {% for car in cars %}
+            <li>Make: {{ car.make }} <br>
+                Model: {{ car.model }} <br>
+                Number Plate: {{ car.license_plate }}</li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'add_car' %}">Add Car</a>
+    <br/>
+    
+    <h2>Your Accepted Rides..</h2>
+    <ul>
+        {% for accepted_request in accepted_requests %}
+            <li>Start location: {{ accepted_request.start_location }} <br> 
+                Destination: {{ accepted_request.destination }} <br> 
+                Driver: {{ accepted_request.driver.name }} <br>
+                Driver Phone Number: {{ accepted_request.driver.phone }}</li>
+        {% endfor %}
+    </ul>
+
+    <br/>
+
+    <h2>Your Pending Rides</h2>
+    <ul>
+        {% for pending_request in pending_requests %}
+            <li>Start Location: {{ pending_request.start_location }} <br>
+                Destination: {{ pending_request.destination }} </li>
+        {% endfor %}
+    </ul>
+
+    <a href="{% url 'need_driver' %}">Need a Driver??</h2>
+    <!-- Add form or UI for posting location and destination -->
+
+    <br>
+    <br>
+    <a href="{% url 'user_logout' %}">Logout</a>
+</body>
+</html>

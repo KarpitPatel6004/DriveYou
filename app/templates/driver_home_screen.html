@@ -1,0 +1,115 @@
+<!-- templates/home.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+</head>
+<body>
+    <h1>Welcome, {{ user.name }}!</h1>
+
+    <div>
+        <h2>Earnings</h2>
+        <p>Total Earnings: ${{ total_earnings }}</p>
+    </div>
+
+    <div>
+        
+        <h2>Ride History</h2>
+        <ul id="rideHistory">
+            {% for ride in ride_history %}
+                <li>Start Location: {{ ride.start_location }} <br>
+                    Destination: {{ ride.destination }} <br>
+                    Client: {{ ride.user.name }} <br>
+                    Ride Pay: {{ ride.price }} </li>
+            {% endfor %}
+        </ul>
+    </div>
+
+    <a href="{% url 'find_rides' %}">Find Rides</a>
+
+    <br>
+    <br>
+    <button id="updateLocationButton">Update Location</button>
+
+    <br>
+    <br>
+    <a href="{% url 'driver_logout' %}">Logout</a>
+
+    <script>
+        let user_loc = navigator.geolocation;
+        function geolocator() {
+            if ('{{ user.location_lat }}' == 'None' || '{{ user.location_lon }}' == 'None') {
+                // If not, request location
+                if (user_loc) {
+                    user_loc.getCurrentPosition(success, error, { enableHighAccuracy: true });
+                } else {
+                    console.error("Your browser doesn't support geolocation API");
+                }
+            }
+        }
+        function success(data) {
+            user_current_lat = data.coords.latitude;
+            user_current_long = data.coords.longitude;
+            updateDriverLocation();
+        }
+        function error(err) {
+            console.error(`Error getting location: ${err.message}`);
+        }
+        function updateDriverLocation() {
+            fetch('/update_driver_location/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-CSRFToken': getCookie('csrftoken'),  // Include CSRF token if using Django's CSRF protection
+                },
+                body: new URLSearchParams({
+                    'latitude': user_current_lat,
+                    'longitude': user_current_long,
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    console.log('Driver location updated successfully');
+                } else {
+                    console.error('Failed to update driver location:', data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error updating driver location:', error);
+            });
+        }
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = cookies[i].trim();
+                    // Check if this cookie string begins with the name we want
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        document.getElementById('updateLocationButton').addEventListener('click', function() {
+            if (user_loc) {
+                user_loc.getCurrentPosition(success, error, { enableHighAccuracy: true });
+            } else {
+                console.error("Your browser doesn't support geolocation API");
+            }
+        });
+
+        window.onload = function() {
+            geolocator();
+        };
+    </script>
+
+</body>
+</html>

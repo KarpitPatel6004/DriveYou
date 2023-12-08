@@ -1,0 +1,240 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Need a Driver?</title>
+    <!-- Include Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+    <h1>Select Start and Destination Locations</h1>
+
+    <div id="map" style="height: 300px;"></div>
+
+    <button id="startLocationButton">Select Start Location</button>
+    <button id="saveStartLocationButton" style="display: none;">Save Start Location</button>
+    <button id="endLocationButton" style="display: none;">Select End Location</button>
+    <button id="saveEndLocationButton" style="display: none;">Save End Location</button>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div id="inputAddressContainer" style="display:none;">
+            <p>Make sure your addresses are correct..</p>   
+            <p>
+                <label for="startAddress">Start Address:</label>
+                <input id="startAddress" type="text" name="start_location" required/>
+            </p>
+            <p>
+                <label for="endAddress">Destination Address:</label>
+                <input id="endAddress" type="text" name="destination" required/>
+            </p>
+            <p>Distance: <span id="displayDistance"></span></p>
+            <p>Duration: <span id="displayDuration"></span></p>
+            <p>Estimated fare amount ($): <span id="displayPrice"></span></p>
+            <input type="hidden" name="distance" id="distance" value="">
+            <input type="hidden" name="duration" id="duration" value="">
+            <input type="hidden" name="price" id="price" value="">
+            <input type="hidden" name="start_lat" id="startLat" value="">
+            <input type="hidden" name="start_lon" id="startLon" value="">
+            <input type="hidden" name="end_lat" id="endLat" value="">
+            <input type="hidden" name="end_lon" id="endLon" value="">
+        </div>
+        <div id="loader" style="display: none;">
+            Please Wait..
+        </div>
+
+        {{ form.as_p }}
+        <button type="submit" class="btn-primary">Find a Driver</button>
+    </form>
+
+    <script src='{% static "js/polyline.js" %}'></script>
+    <script>
+
+        // TODO: get this from backend or calculate prices in backend and send it here..
+        const ratePerMinute = 0.3;  // rate per minute
+        const ratePerKm = 2;    // rate per mile
+        const baseFare = 5;         // base fare
+
+        // Initialize the map
+        const map = L.map('map').setView([44.130,-79.069], 6);
+
+        // Add the OSM layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'}).addTo(map);
+
+        // Create custom icons for start and end markers
+        const startIcon = L.icon({
+            iconUrl: '{% static "images/Location-Marker-256-blue.png" %}',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32],
+        });
+
+        const endIcon = L.icon({
+            iconUrl: '{% static "images/Location-Marker-256-red.png" %}',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32],
+        });
+
+        let startMarker = null;
+        let endMarker = null;
+        let savedStartLoc = false;
+        let savedEndLoc = false;
+        // Event listener for the "Select Start Location" button
+        document.getElementById('startLocationButton').addEventListener('click', function () {
+            document.getElementById('startLocationButton').style.display = 'none';
+            document.getElementById('saveStartLocationButton').style.display = 'block';
+            
+            startMarker = L.marker(map.getCenter(), { icon: startIcon, draggable: false }).addTo(map);
+
+            startMarker.setLatLng(map.getCenter());
+            startMarker.dragging.disable();
+        });
+        
+        // Event listener for the "Save Start Location" button
+        document.getElementById('saveStartLocationButton').addEventListener('click', function () {
+            document.getElementById('saveStartLocationButton').style.display = 'none';
+            document.getElementById('endLocationButton').style.display = 'block';
+            savedStartLoc = true
+        });
+
+        // Event listener for the "Select End Location" button
+        document.getElementById('endLocationButton').addEventListener('click', function () {
+
+            // Marker for the end location
+            endMarker = L.marker(map.getCenter(), { icon: endIcon, draggable: false }).addTo(map);
+
+            document.getElementById('endLocationButton').style.display = 'none';
+            document.getElementById('saveEndLocationButton').style.display = 'block';
+            
+            endMarker.setLatLng(map.getCenter());
+            endMarker.dragging.disable();
+        });
+
+        // Event listener for the "Save End Location" button
+        document.getElementById('saveEndLocationButton').addEventListener('click', function () {
+            document.getElementById('saveEndLocationButton').style.display = 'none';
+            savedEndLoc = true
+            displayPolyline();
+            showAddresses();
+        });
+
+        // Event listener for map move
+        map.on('move', function () {
+            if (startMarker == null) {
+                return;
+            }
+            if (savedStartLoc == false) {
+                startMarker.setLatLng(map.getCenter());
+            } else if (endMarker != null && savedEndLoc == false) {
+                endMarker.setLatLng(map.getCenter());
+            }
+        });
+
+        let distance = null;
+        let duration = null;
+        function displayPolyline() {
+            if (savedStartLoc && savedEndLoc) {
+                const getDirections = async () => {
+                    var startCoords = startMarker.getLatLng().lng + ',' + startMarker.getLatLng().lat;
+                    var endCoords = endMarker.getLatLng().lng + ',' + endMarker.getLatLng().lat;
+                    const url = `https://routing.openstreetmap.de/routed-car/route/v1/driving/${startCoords};${endCoords}?overview=false&alternatives=true&steps=true`
+                    const response = await fetch(url, {method: 'GET'});
+                    const jsonRes = await response.json(); 
+                    if (jsonRes.routes && jsonRes.routes.length > 0) {
+                        duration = jsonRes.routes[0].duration;
+                        distance = jsonRes.routes[0].distance;
+                        // Extract the encoded polylines from the response
+                        var encodedPolylines = jsonRes.routes[0].legs.map(leg => leg.steps.map(step => step.geometry));
+
+                        // Decode each polyline separately
+                        var decodedPolylines = encodedPolylines[0].map(encodedPolyline =>
+                            polyline.decode(encodedPolyline)
+                        );
+
+                        return decodedPolylines;
+                    } else {
+                        console.error('No routes found in the response');
+                        return null; // or handle the absence of routes in some way
+                    }
+                }
+                getDirections().then(decodedPolylines => {
+                    decodedPolylines.forEach(decodedPolyline => {
+                        L.polyline(decodedPolyline, { color: 'red' }).addTo(map);
+                    });
+                }).catch(error => {
+                    console.error('Error fetching or decoding route:', error);
+                });   
+            }
+        }
+        
+        async function getAddress(lat, lon) {
+            const url = `https://nominatim.openstreetmap.org/reverse.php?lat=${lat}&lon=${lon}&format=jsonv2`
+
+            const response = await fetch(url, {method: 'GET'})
+            const data = await response.json();
+                               
+            if (data.display_name) {
+                const splittedAddr = data.display_name.split(",");
+                let address = splittedAddr.slice(0,3).join(",") + "," + splittedAddr.slice(splittedAddr.length - 3, splittedAddr.length);
+
+                return address;
+            } else {
+                console.error('Could not find an address for this location');
+                return null;
+            }
+        }
+
+        async function showAddresses() {
+            var inputAddressContainer = document.getElementById("inputAddressContainer");
+            var loaderContainer = document.getElementById("loader");
+
+            loaderContainer.style.display = "block";
+
+            // Get the input field
+            const [startAddress, endAddress] = await Promise.all([
+                getAddress(startMarker.getLatLng().lat, startMarker.getLatLng().lng),
+                getAddress(endMarker.getLatLng().lat, endMarker.getLatLng().lng)
+            ]);
+            const totalFare = baseFare + (duration/60 * ratePerMinute) + (distance/1000 * ratePerKm);
+
+            loaderContainer.style.display = "none";
+            // Display the input container
+            inputAddressContainer.style.display = "block";
+
+            document.getElementById("startAddress").value = startAddress;
+            document.getElementById("endAddress").value = endAddress;
+            document.getElementById("startLat").value = startMarker.getLatLng().lat;
+            document.getElementById("startLon").value = startMarker.getLatLng().lng;
+            document.getElementById("endLat").value = endMarker.getLatLng().lat;
+            document.getElementById("endLon").value = endMarker.getLatLng().lng;
+            document.getElementById("duration").value = duration;
+            document.getElementById("distance").value = (distance/1000).toFixed(2);
+            document.getElementById("price").value = totalFare.toFixed(2);
+
+            // Update the content of the paragraph elements
+            document.getElementById("displayDistance").textContent = `${(distance/1000).toFixed(2)} km`;
+            document.getElementById("displayDuration").textContent = `${secondsToHms(duration)}`;
+            document.getElementById("displayPrice").textContent = `$${totalFare.toFixed(2)}`;
+        }
+
+        function secondsToHms(d) {
+            d = Number(d);
+            var h = Math.floor(d / 3600);
+            var m = Math.floor(d % 3600 / 60);
+            var s = Math.floor(d % 3600 % 60);
+
+            var hDisplay = h > 0 ? h + (h == 1 ? " hour, " : " hours, ") : "";
+            var mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes, ") : "";
+            var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
+            return hDisplay + mDisplay + sDisplay; 
+        }
+        
+    </script>
+</body>
+</html>

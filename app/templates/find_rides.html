@@ -1,0 +1,110 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Need a Driver?</title>
+    <!-- Include Leaflet CSS and JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+</head>
+<body>
+    <div id="map" style="height: 300px;"></div>
+
+    <script>
+        // Initialize Leaflet map
+        const user_lat = '{{ user.location_lat }}'
+        const user_long = '{{ user.location_lon }}'
+        const map = L.map('map').setView([user_lat, user_long], 6);
+
+        // Add the OSM layer
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors'}).addTo(map);
+
+        const locationIcon = L.icon({
+            iconUrl: '{% static "images/Location-Marker-256-blue.png" %}',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32],
+        });
+
+        const userIcon = L.icon({
+            iconUrl: '{% static "images/Location-Marker-256-red.png" %}',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32],
+        });
+
+        let marker = L.marker([user_lat, user_long], { icon: locationIcon, draggable: false }).addTo(map)
+            .bindPopup('Your Location').openPopup();
+
+        // Function to add a marker for each search request
+        function addSearchRequestMarker(id, lat, lon, startLocation, destination, distance, duration, price) {
+            var userMarker = L.marker([lat, lon], { icon: userIcon, draggable: false }).addTo(map);
+            userMarker.bindPopup(`
+                <strong>Start Location:</strong> ${startLocation}<br>
+                <strong>Destination:</strong> ${destination}<br>
+                <strong>Distance:</strong> ${distance} km<br>
+                <strong>Estimated journey duration:</strong> ${secondsToHms(duration)}<br>
+                <strong>Pay:</strong> $${price}
+                <br>
+                <button type="button" class="btn-primary book-button" data-ride-id="${id}">Accept the ride</button>
+            `);
+        }
+
+        // Add markers for each search request
+        var searchRequests = JSON.parse('{{ search_requests|safe }}');
+        searchRequests.forEach(function(request) {
+            addSearchRequestMarker(
+                request.pk,
+                request.fields.start_lat,
+                request.fields.start_lon,
+                request.fields.start_location,
+                request.fields.destination,
+                request.fields.distance,
+                request.fields.duration,
+                request.fields.price
+            );
+        });
+
+        function secondsToHms(d) {
+            d = Number(d);
+            var h = Math.floor(d / 3600);
+            var m = Math.floor(d % 3600 / 60);
+            var s = Math.floor(d % 3600 % 60);
+
+            var hDisplay = h > 0 ? h + (h == 1 ? " hour, " : " hours, ") : "";
+            var mDisplay = m > 0 ? m + (m == 1 ? " minute, " : " minutes, ") : "";
+            var sDisplay = s > 0 ? s + (s == 1 ? " second" : " seconds") : "";
+            return hDisplay + mDisplay + sDisplay; 
+        }
+
+        document.getElementById('map').addEventListener('click', function(event) {
+        const clickedElement = event.target;
+        if (clickedElement.classList.contains('book-button')) {
+            console.log("Button clicked!");
+            const rideId = clickedElement.getAttribute('data-ride-id');
+            // Make an AJAX request to update the ride status
+            fetch(`/update-ride-status/${rideId}/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+                body: JSON.stringify({ accepted: true })
+            })
+            .then(response => response.json())
+            .then(data => {
+                window.location.href = '/driver_home_screen';
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    });
+    </script>
+    
+
+</body>
+</html>
